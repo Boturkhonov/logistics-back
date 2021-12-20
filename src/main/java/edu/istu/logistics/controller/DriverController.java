@@ -5,6 +5,7 @@ import edu.istu.logistics.entity.User;
 import edu.istu.logistics.repo.RoleRepository;
 import edu.istu.logistics.repo.UserRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @RestController
@@ -25,9 +28,14 @@ public class DriverController {
 
     private final RoleRepository roleRepository;
 
-    public DriverController(UserRepository userRepository, RoleRepository roleRepository) {
+    private final PasswordEncoder passwordEncoder;
+
+    public DriverController(UserRepository userRepository,
+            RoleRepository roleRepository,
+            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping("{id}")
@@ -61,7 +69,17 @@ public class DriverController {
 
     @PostMapping
     public ResponseEntity<?> saveDriver(@RequestBody User user) {
-        return ResponseEntity.ok(userRepository.save(user));
+        user.setLogin(user.getLogin().toLowerCase(Locale.ROOT));
+        final Optional<User> userOptional = userRepository.findByLogin(user.getLogin());
+        if (!userOptional.isPresent()) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            final Role role = roleRepository.findByName("DRIVER");
+            user.setRoles(Collections.singleton(role));
+            userRepository.save(user);
+            return ResponseEntity.ok(user);
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @DeleteMapping
