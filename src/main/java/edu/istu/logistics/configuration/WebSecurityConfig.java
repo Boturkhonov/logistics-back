@@ -22,8 +22,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final String[] ALLOWED_GUEST_POST = new String[] { "/api/login" };
 
-    private final String[] ALLOWED_DRIVER_POST = new String[] { "api/routes/update" };
-
     private final UserDetailsServiceImpl userDetailsService;
 
     private final JwtRequestFilter jwtRequestFilter;
