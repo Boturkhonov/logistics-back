@@ -64,7 +64,14 @@ public class DriverController {
 
     @PostMapping("/update")
     public ResponseEntity<?> updateDriver(@RequestBody User user) {
-        return ResponseEntity.ok(userRepository.save(user));
+
+        final Optional<User> optional = userRepository.findById(user.getId());
+        if (optional.isPresent()) {
+            user.setPassword(optional.get().getPassword());
+            return ResponseEntity.ok(userRepository.save(user));
+        }
+
+        return ResponseEntity.notFound().build();
     }
 
     @PostMapping
